@@ -179,31 +179,31 @@ jobs:
           cp -r "$APP_PATH" /tmp/Payload/
 
           cd /tmp
-          zip -r AmgiApp-unsigned.ipa Payload
+          zip -r AmgiApp-daily-limit-settings.ipa Payload
 
           echo "=== IPA created ==="
-          ls -lh /tmp/AmgiApp-unsigned.ipa
+          ls -lh /tmp/AmgiApp-daily-limit-settings.ipa
 
       # ── 12. Upload unsigned IPA as workflow artifact ───────────────
       - name: Upload unsigned IPA
         uses: actions/upload-artifact@v4
         with:
-          name: AmgiApp-unsigned-ipa
-          path: /tmp/AmgiApp-unsigned.ipa
+          name: AmgiApp-daily-limit-settings-ipa
+          path: /tmp/AmgiApp-daily-limit-settings.ipa
           retention-days: 7
 
       # ── 13. Generate build summary ────────────────────────────────
       - name: Generate Build Summary
         if: always()
         run: |
-          IPA_PATH="/tmp/AmgiApp-unsigned.ipa"
+          IPA_PATH="/tmp/AmgiApp-daily-limit-settings.ipa"
           {
             echo "# Amgi iOS IPA Build Summary"
             echo ""
             echo "**Build Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
             echo "**Commit**: \`${{ github.sha }}\`"
             echo "**Branch / Ref**: \`${{ github.ref_name }}\`"
-            echo "**IPA File**: AmgiApp-unsigned.ipa"
+            echo "**IPA File**: AmgiApp-daily-limit-settings.ipa"
             if [ -f "$IPA_PATH" ]; then
               IPA_SIZE=$(ls -lh "$IPA_PATH" | awk '{print $5}')
               IPA_SHA256=$(shasum -a 256 "$IPA_PATH" | awk '{print $1}')
@@ -251,7 +251,7 @@ jobs:
           name: ${{ github.ref_name }}
           draft: false
           prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
-          files: /tmp/AmgiApp-unsigned.ipa
+          files: /tmp/AmgiApp-daily-limit-settings.ipa
           body: |
             ## Amgi ${{ github.ref_name }}
 
@@ -259,7 +259,7 @@ jobs:
 
             ### Install
 
-            1. Download `AmgiApp-unsigned.ipa` from this release.
+            1. Download `AmgiApp-daily-limit-settings.ipa` from this release.
             2. Open AltStore or Sideloadly on your computer.
             3. Drag the IPA into the tool and sign with your Apple ID.
             4. Install on your device.
@@ -269,7 +269,7 @@ jobs:
             ### Verify
 
             ```
-            shasum -a 256 AmgiApp-unsigned.ipa
+            shasum -a 256 AmgiApp-daily-limit-settings.ipa
             ```
 
             Expected SHA256: `${{ env.IPA_SHA256 }}`
