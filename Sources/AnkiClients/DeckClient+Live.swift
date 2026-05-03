@@ -41,6 +41,10 @@ extension DeckClient: DependencyKey {
             emptyFilteredDeck: { deckId in
                 try decks.emptyFilteredDeck(deckId)
                 logger.info("Emptied filtered deck \(deckId)")
+            },
+            setDailyLimits: { deckId, newLimit, reviewLimit in
+                try decks.setDailyLimits(deckId, newLimit, reviewLimit)
+                logger.info("Set daily limits for deck \(deckId): new=\(newLimit), review=\(reviewLimit)")
             }
         )
     }()

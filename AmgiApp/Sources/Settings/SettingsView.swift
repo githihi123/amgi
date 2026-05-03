@@ -16,6 +16,12 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Study") {
+                NavigationLink("Daily Card Limits") {
+                    StudyLimitSettingsView()
+                }
+            }
+
             Section("Tags") {
                 NavigationLink("Manage Tags") {
                     TagsView()

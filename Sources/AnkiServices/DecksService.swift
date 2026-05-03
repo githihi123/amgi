@@ -17,6 +17,7 @@ public struct DecksService: Sendable {
     public var removeDeck: @Sendable (_ deckId: Int64) throws -> Void
     public var rebuildFilteredDeck: @Sendable (_ deckId: Int64) throws -> Int
     public var emptyFilteredDeck: @Sendable (_ deckId: Int64) throws -> Void
+    public var setDailyLimits: @Sendable (_ deckId: Int64, _ newLimit: UInt32, _ reviewLimit: UInt32) throws -> Void
 }
 
 extension DecksService: DependencyKey {
@@ -142,6 +143,14 @@ extension DecksService: DependencyKey {
                     method: AnkiBackend.SchedulerMethod.emptyFilteredDeck,
                     request: req
                 )
+            },
+            setDailyLimits: { deckId, newLimit, reviewLimit in
+                try setDailyLimits(
+                    for: deckId,
+                    newLimit: newLimit,
+                    reviewLimit: reviewLimit,
+                    backend: backend
+                )
             }
         )
     }()
@@ -203,3 +212,134 @@ private func mapDeckTreeNode(_ node: Anki_Decks_DeckTreeNode, parentPath: String
     )
 }
 
+private func setDailyLimits(
+    for deckId: Int64,
+    newLimit: UInt32,
+    reviewLimit: UInt32,
+    backend: AnkiBackend
+) throws {
+    var firstError: Error?
+    var succeeded = false
+
+    do {
+        try updateDeckConfigLimits(
+            for: deckId,
+            newLimit: newLimit,
+            reviewLimit: reviewLimit,
+            backend: backend
+        )
+        succeeded = true
+    } catch {
+        firstError = error
+    }
+
+    do {
+        try extendTodayLimits(
+            for: deckId,
+            newLimit: newLimit,
+            reviewLimit: reviewLimit,
+            backend: backend
+        )
+        succeeded = true
+    } catch {
+        if firstError == nil {
+            firstError = error
+        }
+    }
+
+    if !succeeded, let firstError {
+        throw DeckLimitUpdateFailed(underlying: firstError)
+    }
+}
+
+private func updateDeckConfigLimits(
+    for deckId: Int64,
+    newLimit: UInt32,
+    reviewLimit: UInt32,
+    backend: AnkiBackend
+) throws {
+    var deckIdRequest = Anki_Decks_DeckId()
+    deckIdRequest.did = deckId
+
+    let currentOptions: Anki_DeckConfig_DeckConfigsForUpdate = try backend.invoke(
+        service: AnkiBackend.Service.deckConfig,
+        method: AnkiBackend.DeckConfigMethod.getDeckConfigsForUpdate,
+        request: deckIdRequest
+    )
+
+    let currentConfigId = currentOptions.currentDeck.configID
+    guard var config = currentOptions.allConfig
+        .map(\.config)
+        .first(where: { $0.id == currentConfigId }) ?? matchingDefaultConfig(
+            in: currentOptions,
+            configId: currentConfigId
+        )
+    else {
+        return
+    }
+
+    var configValues = config.config
+    configValues.newPerDay = newLimit
+    configValues.reviewsPerDay = reviewLimit
+    config.config = configValues
+
+    var limits = currentOptions.currentDeck.limits
+    limits.new = newLimit
+    limits.review = reviewLimit
+
+    var updateRequest = Anki_DeckConfig_UpdateDeckConfigsRequest()
+    updateRequest.targetDeckID = deckId
+    updateRequest.configs = [config]
+    updateRequest.mode = .applyToChildren
+    updateRequest.cardStateCustomizer = currentOptions.cardStateCustomizer
+    updateRequest.limits = limits
+    updateRequest.newCardsIgnoreReviewLimit = true
+    updateRequest.fsrs = currentOptions.fsrs
+    updateRequest.applyAllParentLimits = false
+    updateRequest.fsrsReschedule = false
+    updateRequest.fsrsHealthCheck = currentOptions.fsrsHealthCheck
+
+    let _: Anki_Collection_OpChanges = try backend.invoke(
+        service: AnkiBackend.Service.deckConfig,
+        method: AnkiBackend.DeckConfigMethod.updateDeckConfigs,
+        request: updateRequest
+    )
+}
+
+private func extendTodayLimits(
+    for deckId: Int64,
+    newLimit: UInt32,
+    reviewLimit: UInt32,
+    backend: AnkiBackend
+) throws {
+    var request = Anki_Scheduler_ExtendLimitsRequest()
+    request.deckID = deckId
+    request.newDelta = safeDelta(newLimit)
+    request.reviewDelta = safeDelta(reviewLimit)
+
+    try backend.callVoid(
+        service: AnkiBackend.Service.scheduler,
+        method: AnkiBackend.SchedulerMethod.extendLimits,
+        request: request
+    )
+}
+
+private func matchingDefaultConfig(
+    in options: Anki_DeckConfig_DeckConfigsForUpdate,
+    configId: Int64
+) -> Anki_DeckConfig_DeckConfig? {
+    guard options.defaults.id == configId else { return nil }
+    return options.defaults
+}
+
+private func safeDelta(_ value: UInt32) -> Int32 {
+    Int32(min(value, UInt32(Int32.max)))
+}
+
+private struct DeckLimitUpdateFailed: LocalizedError {
+    let underlying: Error
+
+    var errorDescription: String? {
+        "Could not update daily limits: \(underlying.localizedDescription)"
+    }
+}

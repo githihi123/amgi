@@ -12,6 +12,7 @@ public struct DeckClient: Sendable {
     public var delete: @Sendable (_ deckId: Int64) throws -> Void
     public var rebuildFilteredDeck: @Sendable (_ deckId: Int64) throws -> Int
     public var emptyFilteredDeck: @Sendable (_ deckId: Int64) throws -> Void
+    public var setDailyLimits: @Sendable (_ deckId: Int64, _ newLimit: UInt32, _ reviewLimit: UInt32) throws -> Void
 }
 
 extension DeckClient: TestDependencyKey {

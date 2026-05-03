@@ -29,6 +29,35 @@ enum ReviewPreferences {
     }
 }
 
+enum StudyLimitPreferences {
+    enum Keys {
+        static let newCardsPerDay = "study_limit_new_cards_per_day"
+        static let reviewsPerDay = "study_limit_reviews_per_day"
+    }
+
+    static let defaultLimit: UInt32 = 999
+    static let maxLimit: UInt32 = 999_999
+
+    static var newCardsPerDay: UInt32 {
+        persistedLimit(forKey: Keys.newCardsPerDay)
+    }
+
+    static var reviewsPerDay: UInt32 {
+        persistedLimit(forKey: Keys.reviewsPerDay)
+    }
+
+    static func save(newCardsPerDay: UInt32, reviewsPerDay: UInt32) {
+        UserDefaults.standard.set(Int(newCardsPerDay), forKey: Keys.newCardsPerDay)
+        UserDefaults.standard.set(Int(reviewsPerDay), forKey: Keys.reviewsPerDay)
+    }
+
+    private static func persistedLimit(forKey key: String) -> UInt32 {
+        let raw = UserDefaults.standard.integer(forKey: key)
+        guard raw > 0 else { return defaultLimit }
+        return min(UInt32(raw), maxLimit)
+    }
+}
+
 enum ReaderPreferences {
     enum Keys {
         static let showTab = "reader_pref_show_tab"

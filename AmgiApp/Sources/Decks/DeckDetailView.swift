@@ -168,6 +168,11 @@ struct DeckDetailView: View {
 
     private func loadCounts() async {
         do {
+            try? deckClient.setDailyLimits(
+                deck.id,
+                StudyLimitPreferences.newCardsPerDay,
+                StudyLimitPreferences.reviewsPerDay
+            )
             counts = try deckClient.countsForDeck(deck.id)
             print("[DeckDetail] Counts for '\(deck.name)' (\(deck.id)): new=\(counts.newCount), learn=\(counts.learnCount), review=\(counts.reviewCount)")
         } catch {

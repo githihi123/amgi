@@ -184,6 +184,7 @@ extension AnkiBackend {
         package static let collection: UInt32 = 3
         package static let cards: UInt32 = 5
         package static let decks: UInt32 = 7
+        package static let deckConfig: UInt32 = 9
         package static let scheduler: UInt32 = 13
         package static let notetypes: UInt32 = 23
         package static let notes: UInt32 = 25
@@ -223,6 +224,7 @@ extension AnkiBackend {
         package static let getQueuedCards: UInt32 = 3
         package static let answerCard: UInt32 = 4
         package static let schedTimingToday: UInt32 = 5
+        package static let extendLimits: UInt32 = 9
         package static let countsForDeckToday: UInt32 = 10
         package static let congratsInfo: UInt32 = 11
         package static let emptyFilteredDeck: UInt32 = 15
@@ -249,6 +251,11 @@ extension AnkiBackend {
         package static let renameDeck: UInt32 = 18
         package static let setCurrentDeck: UInt32 = 22
         package static let getCurrentDeck: UInt32 = 23
+    }
+
+    package enum DeckConfigMethod {
+        package static let getDeckConfigsForUpdate: UInt32 = 6
+        package static let updateDeckConfigs: UInt32 = 7
     }
 
     package enum SearchMethod {

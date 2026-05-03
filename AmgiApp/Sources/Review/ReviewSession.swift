@@ -34,6 +34,11 @@ final class ReviewSession {
     func start() {
         do {
             try decks.setCurrentDeck(deckId)
+            try? decks.setDailyLimits(
+                deckId,
+                StudyLimitPreferences.newCardsPerDay,
+                StudyLimitPreferences.reviewsPerDay
+            )
 
             let result = try scheduler.getQueuedCards(200)
             cardQueue = result.cards
