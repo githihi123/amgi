@@ -218,7 +218,7 @@ private func applyDailyLimits(
     reviewLimit: UInt32,
     backend: AnkiBackend
 ) throws {
-    var firstError: Error?
+    var firstError: (any Error)?
     var succeeded = false
 
     do {
@@ -337,7 +337,7 @@ private func safeDelta(_ value: UInt32) -> Int32 {
 }
 
 private struct DeckLimitUpdateFailed: LocalizedError {
-    let underlying: Error
+    let underlying: any Error
 
     var errorDescription: String? {
         "Could not update daily limits: \(underlying.localizedDescription)"

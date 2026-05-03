@@ -14,7 +14,7 @@ struct StudyLimitSettingsView: View {
 
     var body: some View {
         Form {
-            Section("Daily Limits") {
+            Section {
                 TextField("New cards per day", text: $newCardsText)
                     .keyboardType(.numberPad)
                 TextField("Reviews per day", text: $reviewsText)
@@ -26,6 +26,8 @@ struct StudyLimitSettingsView: View {
                     Label("Apply to All Decks", systemImage: "checkmark.circle")
                 }
                 .disabled(!hasValidLimits || isApplying)
+            } header: {
+                Text("Daily Limits")
             } footer: {
                 Text("Saved limits are also applied automatically when opening a deck or starting review.")
             }
@@ -37,7 +39,7 @@ struct StudyLimitSettingsView: View {
                 }
             }
 
-            Section("Decks") {
+            Section {
                 if decks.isEmpty {
                     Text("No decks found")
                         .foregroundStyle(.secondary)
@@ -56,6 +58,8 @@ struct StudyLimitSettingsView: View {
                         }
                     }
                 }
+            } header: {
+                Text("Decks")
             }
         }
         .navigationTitle("Daily Card Limits")
