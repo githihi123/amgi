@@ -145,7 +145,7 @@ extension DecksService: DependencyKey {
                 )
             },
             setDailyLimits: { deckId, newLimit, reviewLimit in
-                try setDailyLimits(
+                try applyDailyLimits(
                     for: deckId,
                     newLimit: newLimit,
                     reviewLimit: reviewLimit,
@@ -212,7 +212,7 @@ private func mapDeckTreeNode(_ node: Anki_Decks_DeckTreeNode, parentPath: String
     )
 }
 
-private func setDailyLimits(
+private func applyDailyLimits(
     for deckId: Int64,
     newLimit: UInt32,
     reviewLimit: UInt32,
